@@ -1,6 +1,6 @@
 from importlib import import_module
 
-VERSION = (0, 1, 5)
+VERSION = (0, 1, 5, 1)
 # 1.5 is currently on pypi
 
 
