@@ -1,8 +1,11 @@
 # encoding: utf-8
-import datetime
+import logging
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
+
+logger = logging.getLogger(__name__)
+
 
 class Migration(SchemaMigration):
 
@@ -12,7 +15,7 @@ class Migration(SchemaMigration):
         try:
             db.delete_unique('datatrans_keyvalue', ['language', 'digest'])
         except ValueError:
-            print "  WARNING: current index didn't exist"
+            logger.warning("  WARNING: current index didn't exist")
 
         # Adding field 'KeyValue.content_type'
         db.add_column('datatrans_keyvalue', 'content_type', self.gf('django.db.models.fields.related.ForeignKey')(default=None, null=True, to=orm['contenttypes.ContentType']), keep_default=False)

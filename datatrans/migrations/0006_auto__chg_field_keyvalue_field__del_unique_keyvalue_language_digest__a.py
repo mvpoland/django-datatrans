@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+import logging
 from south.db import db
 from south.v2 import SchemaMigration
+
+
+logger = logging.getLogger(__name__)
 
 
 class Migration(SchemaMigration):
@@ -10,7 +14,7 @@ class Migration(SchemaMigration):
         try:
             db.delete_unique('datatrans_keyvalue', ['language', 'digest'])
         except ValueError:
-            print "  WARNING: current index didn't exist"
+            logger.warning("  WARNING: current index didn't exist")
 
         # Changing field 'KeyValue.field'
         db.alter_column('datatrans_keyvalue', 'field', self.gf('django.db.models.fields.CharField')(max_length=255))
