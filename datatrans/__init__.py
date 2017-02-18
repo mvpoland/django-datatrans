@@ -1,5 +1,4 @@
-VERSION = (0, 1, 5)
-# 1.5 is currently on pypi
+VERSION = (0, 1, 6)
 
 
 def get_version():
