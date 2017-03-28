@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import signals
 from django.db.models.query import QuerySet
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 from hashlib import sha1
 
@@ -137,7 +137,7 @@ class KeyValue(models.Model):
     """
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.PositiveIntegerField(null=True, default=None)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey('content_type', 'object_id')
     field = models.CharField(max_length=255)
     language = models.CharField(max_length=5, db_index=True, choices=settings.LANGUAGES)
 
@@ -146,7 +146,7 @@ class KeyValue(models.Model):
     fuzzy = models.BooleanField(blank=True, default=False)
 
     digest = models.CharField(max_length=40, db_index=True)
-    updated = models.DateTimeField(auto_now=True, default=datetime.datetime.now)
+    updated = models.DateTimeField(auto_now=True)
 
     objects = KeyValueManager()
 
