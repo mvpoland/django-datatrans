@@ -5,6 +5,7 @@ from django.template.context import RequestContext
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.contenttypes.models import ContentType
+from django.utils.text import ugettext_lazy as _
 
 from datatrans import utils
 from datatrans.models import KeyValue
@@ -32,8 +33,13 @@ def _get_model_slug(model):
 
 def _get_model_entry(slug):
     app_label, model_slug = slug.split('.')
-    ct = ContentType.objects.get(app_label=app_label, model=model_slug)
-    model_class = ct.model_class()
+
+    try:
+        ct = ContentType.objects.get(app_label=app_label, model=model_slug)
+        model_class = ct.model_class()
+    except ContentType.DoesNotExist:
+        raise Http404(_('Content type not found'))
+
     registry = utils.get_registry()
     if not model_class in registry:
         raise Http404(u'No registered model found for given query.')
