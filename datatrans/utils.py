@@ -89,6 +89,8 @@ def _count_words(text):
     """
     Count words in a piece of text.
     """
+    if isinstance(text, (list, tuple)):
+        text = '\n'.join(text)
     return len(text.split()) if text else 0
 
 
@@ -153,6 +155,9 @@ class FieldDescriptor(object):
                 original = value
 
             kv = KeyValue.objects.get_keyvalue(original, lang_code, instance, self.name)
+            if isinstance(value, (list, tuple)):
+                value = '\r\n'.join(value)
+
             kv.value = value
             kv.edited = True
             kv.save()

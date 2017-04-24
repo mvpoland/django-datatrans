@@ -1,4 +1,3 @@
-import datetime
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
@@ -12,6 +11,8 @@ from hashlib import sha1
 
 def make_digest(key):
     """Get the SHA1 hexdigest of the given key"""
+    if isinstance(key, (list, tuple)):
+        key = '\n'.join(key)
     return sha1(key.encode('utf-8')).hexdigest()
 
 
@@ -32,6 +33,9 @@ class KeyValueManager(models.Manager):
 
     def get_keyvalue(self, key, language, obj, field):
         key = key or ''
+        if isinstance(key, (list, tuple)):
+            key = '\n'.join(key)
+
         digest = make_digest(key)
         content_type = ContentType.objects.get_for_model(obj.__class__)
         object_id = obj.id
@@ -46,6 +50,8 @@ class KeyValueManager(models.Manager):
     def lookup(self, key, language, obj, field):
         kv = self.get_keyvalue(key, language, obj, field)
         if kv.edited:
+            if isinstance(key, (list, tuple)) and not isinstance(kv.value, (list, tuple)):
+                return kv.value.splitlines()
             return kv.value
         else:
             return key
