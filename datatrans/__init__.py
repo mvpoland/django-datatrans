@@ -1,6 +1,6 @@
 from importlib import import_module
 
-VERSION = (0, 2, 5)
+VERSION = (0, 3, 0)
 
 
 def get_version():
