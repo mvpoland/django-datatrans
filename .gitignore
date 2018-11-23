@@ -22,6 +22,7 @@ pip-log.txt
 *.log
 *.pot
 *.db
+*.sqlite3
 local_settings.py
 ## Eclipse
 *.pydevproject
@@ -42,6 +43,7 @@ local.properties
 # CDT-specific
 .cproject
 .idea
+*.iml
 
 # Ignore build output
 build

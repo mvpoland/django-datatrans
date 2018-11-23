@@ -20,6 +20,7 @@ else:
 USING_POSTGRESQL = DATABASE_ENGINE.startswith('postgresql') or \
     DATABASE_ENGINE.startswith('django.db.backends.postgresql')
 
+
 class PostgresRegressionTest(TestCase):
     if USING_POSTGRESQL:
         def test_concurrent_inserts_with_same_value_break_pre_save(self):
@@ -31,8 +32,9 @@ class PostgresRegressionTest(TestCase):
                 count_kv = KeyValue.objects.filter(language=get_default_language(),
                                                    value=value).count()
                 self.assertEqual(count_kv, 1,
-                                 u"Got %d KeyValues after concurrent insert instead of 1." % count_kv)
+                                 u"Got {} KeyValues after concurrent insert instead of 1.".format(count_kv))
             add_new_records()
+
 
 class RegressionTests(TestCase):
     def test_access_before_save_breaks_pre_save(self):
