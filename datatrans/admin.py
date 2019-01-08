@@ -10,4 +10,5 @@ class KeyValueAdmin(admin.ModelAdmin):
     search_fields = ('content_type__app_label', 'content_type__model', 'value',)
     list_filter = ('content_type', 'language', 'edited', 'fuzzy')
 
+
 admin.site.register(KeyValue, KeyValueAdmin)

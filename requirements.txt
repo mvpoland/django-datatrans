@@ -1,0 +1,4 @@
+# Dependencies required to develop/test this app.
+
+Django==1.9.12
+tox

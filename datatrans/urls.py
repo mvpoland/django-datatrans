@@ -1,4 +1,4 @@
-from .compat import url
+from django.conf.urls import url
 from datatrans import views
 
 urlpatterns = [

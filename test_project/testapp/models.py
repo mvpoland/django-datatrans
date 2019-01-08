@@ -1,20 +1,24 @@
+from __future__ import unicode_literals
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from datatrans.utils import register
+from six import python_2_unicode_compatible
 
-# Create your models here.
+
+@python_2_unicode_compatible
 class Option(models.Model):
-    name = models.CharField(_(u'name'), max_length=64)
+    name = models.CharField(_('name'), max_length=64)
 
     class Meta:
-        verbose_name = _(u'option')
-        verbose_name_plural = _(u'options')
+        verbose_name = _('option')
+        verbose_name_plural = _('options')
 
-    def __unicode__(self):
-        return u'%s' % self.name
+    def __str__(self):
+        return '{}'.format(self.name)
 
-# register translations
+
 class OptionTranslation(object):
     fields = ('name',)
+
 
 register(Option, OptionTranslation)

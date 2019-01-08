@@ -1,6 +1,7 @@
+from __future__ import unicode_literals
 from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect, Http404
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse_lazy
 from django.template.context import RequestContext
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
@@ -10,6 +11,7 @@ from django.utils.text import ugettext_lazy as _
 from datatrans import utils
 from datatrans.models import KeyValue
 from datatrans.utils import count_model_words
+
 
 def can_translate(user):
     if not user.is_authenticated():
@@ -28,7 +30,7 @@ def can_translate(user):
 
 def _get_model_slug(model):
     ct = ContentType.objects.get_for_model(model)
-    return u'%s.%s' % (ct.app_label, ct.model)
+    return '{}.{}'.format(ct.app_label, ct.model)
 
 
 def _get_model_entry(slug):
@@ -41,7 +43,7 @@ def _get_model_entry(slug):
         raise Http404(_('Content type not found'))
 
     registry = utils.get_registry()
-    if not model_class in registry:
+    if model_class not in registry:
         raise Http404(u'No registered model found for given query.')
     return model_class
 
@@ -74,8 +76,8 @@ def model_list(request):
     languages = [l for l in settings.LANGUAGES if l[0] != default_lang]
 
     models = [{'slug': _get_model_slug(model),
-               'model_name': u'%s' % model._meta.verbose_name,
-               'field_names': [u'%s' % f.verbose_name for f in registry[model].values()],
+               'model_name': '{}'.format(model._meta.verbose_name),
+               'field_names': ['{}'.format(f.verbose_name) for f in registry[model].values()],
                'stats': _get_model_stats(model),
                'words': count_model_words(model),
                'languages': [
@@ -104,8 +106,8 @@ def commit_translations(request):
         (KeyValue.objects.get(pk=int(k.split('_')[1])), v)
         for k, v in request.POST.items() if 'translation_' in k]
     for keyvalue, translation in translations:
-        empty = 'empty_%d' % keyvalue.pk in request.POST
-        ignore = 'ignore_%d' % keyvalue.pk in request.POST
+        empty = 'empty_{}'.format(keyvalue.pk) in request.POST
+        ignore = 'ignore_{}'.format(keyvalue.pk) in request.POST
         if translation != '' or empty or ignore:
             if keyvalue.value != translation:
                 if not ignore:
@@ -119,7 +121,7 @@ def commit_translations(request):
 
 def get_context_object(model, fields, language, default_lang, object):
     object_item = {}
-    object_item['name'] = unicode(object)
+    object_item['name'] = str(object)
     object_item['id'] = object.id
     object_item['fields'] = object_fields = []
     for field in fields.values():
@@ -128,7 +130,7 @@ def get_context_object(model, fields, language, default_lang, object):
         translation = KeyValue.objects.get_keyvalue(key, language, object, field.name)
         object_fields.append({
             'name': field.name,
-            'verbose_name': unicode(field.verbose_name),
+            'verbose_name': str(field.verbose_name),
             'original': original,
             'translation': translation
         })
@@ -149,7 +151,7 @@ def editor(request, model, language, objects):
     fields = registry[model]
 
     default_lang = utils.get_default_language()
-    model_name = u'%s' % model._meta.verbose_name
+    model_name = '{}'.format(model._meta.verbose_name)
 
     first_unedited_translation = None
     object_list = []
@@ -235,7 +237,7 @@ def model_detail(request, slug, language):
 @user_passes_test(can_translate, settings.LOGIN_URL)
 def make_messages(request):
     utils.make_messages()
-    return HttpResponseRedirect(reverse('datatrans_model_list'))
+    return HttpResponseRedirect(reverse_lazy('datatrans_model_list'))
 
 
 @user_passes_test(can_translate, settings.LOGIN_URL)
@@ -248,7 +250,7 @@ def obsolete_list(request):
 
     if request.method == 'POST':
         all_obsoletes.delete()
-        return HttpResponseRedirect(reverse('datatrans_obsolete_list'))
+        return HttpResponseRedirect(reverse_lazy('datatrans_obsolete_list'))
 
     context = {'obsoletes': obsoletes}
     return render_to_response('datatrans/obsolete_list.html', context, context_instance=RequestContext(request))

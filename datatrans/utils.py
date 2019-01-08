@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+from __future__ import unicode_literals
 import operator
 import django
 
@@ -106,7 +107,7 @@ def get_default_language():
         lang = lang.split('-')[0]
         default = [l[0] for l in settings.LANGUAGES if l[0] == lang]
     if len(default) == 0:
-        raise ImproperlyConfigured("The [SOURCE_]LANGUAGE_CODE '%s' is not found in your LANGUAGES setting." % lang)
+        raise ImproperlyConfigured("The [SOURCE_]LANGUAGE_CODE '{}' is not found in your LANGUAGES setting.".format(lang))
     return default[0]
 
 
@@ -137,7 +138,7 @@ class FieldDescriptor(object):
         lang_code = get_current_language()
         key = instance.__dict__[self.name]
         if not key:
-            return u''
+            return ''
         if instance.id is None:
             return key
         return KeyValue.objects.lookup(key, lang_code, instance, self.name)
@@ -150,7 +151,7 @@ class FieldDescriptor(object):
             instance.__dict__[self.name] = value
         else:
             original = instance.__dict__[self.name]
-            if original == u'':
+            if original == '':
                 instance.__dict__[self.name] = value
                 original = value
 
@@ -277,7 +278,7 @@ def _datatrans_filter(self, language=None, mode='and', **kwargs):
                             " has not been registered for translation.")
 
         def add_filters(field, method, value):
-            filters = { 'field' : field, 'value__' + method : value }
+            filters = {'field': field, 'value__' + method: value}
             q_objects.append(models.Q(**filters))
 
         try:
@@ -333,7 +334,7 @@ def register(model, modeltranslation):
 
     """
 
-    if not model in REGISTRY:
+    if model not in REGISTRY:
         # create a fields dict (models apparently lack this?!)
         if django.VERSION >= (1, 6):
             # In 1.6, '_fields()' does not exist anymore; in 1.5 both exists and

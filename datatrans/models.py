@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 
 from hashlib import sha1
+from six import python_2_unicode_compatible
 
 
 def make_digest(key):
@@ -20,8 +21,9 @@ def _get_cache_keys(self):
     """Get all the cache keys for the given object"""
     kv_id_fields = ('language', 'digest', 'content_type_id', 'object_id', 'field')
     values = tuple(getattr(self, attr) for attr in kv_id_fields)
-    return ('datatrans_%s_%s_%s_%s_%s' % values,
-            'datatrans_%s' % self.id)
+    return ('datatrans_{}_{}_{}_{}_{}'.format(*values),
+            'datatrans_{}'.format(self.id))
+
 
 # cache for an hour
 CACHE_DURATION = getattr(settings, 'DATATRANS_CACHE_DURATION', 60 * 60)
@@ -97,7 +99,7 @@ class KeyValueQuerySet(QuerySet):
     def iterator(self):
         superiter = super(KeyValueQuerySet, self).iterator()
         while True:
-            obj = superiter.next()
+            obj = next(superiter)
             # Use cache.add instead of cache.set to prevent race conditions
             for key in obj.cache_keys:
                 cache.add(key, obj, CACHE_DURATION)
@@ -123,12 +125,12 @@ class KeyValueQuerySet(QuerySet):
         if len(kwargs) == 1:
             k = kwargs.keys()[0]
             if k in ('pk', 'pk__exact', 'id', 'id__exact'):
-                obj = cache.get('datatrans_%s' % kwargs.values()[0])
+                obj = cache.get('datatrans_{}'.format(kwargs.values()[0]))
                 if obj is not None:
                     return obj
         elif set(kv_id_fields) <= set(kwargs.keys()):
             values = tuple(kwargs[attr] for attr in kv_id_fields)
-            obj = cache.get('datatrans_%s_%s_%s_%s_%s' % values)
+            obj = cache.get('datatrans_{}_{}_{}_{}_{}'.format(*values))
 
             if obj is not None:
                 return obj
@@ -137,6 +139,7 @@ class KeyValueQuerySet(QuerySet):
         return super(KeyValueQuerySet, self).get(*args, **kwargs)
 
 
+@python_2_unicode_compatible
 class KeyValue(models.Model):
     """
     The datatrans magic is stored in this model. It stores the localized fields of models.
@@ -156,8 +159,8 @@ class KeyValue(models.Model):
 
     objects = KeyValueManager()
 
-    def __unicode__(self):
-        return u'%s: %s' % (self.language, self.value)
+    def __str__(self):
+        return '{}: {}'.format(self.language, self.value)
 
     class Meta:
         #unique_together = ('digest', 'language')
