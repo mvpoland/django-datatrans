@@ -1,8 +1,7 @@
 from __future__ import unicode_literals
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.http import HttpResponseRedirect, Http404
-from django.core.urlresolvers import reverse_lazy
-from django.template.context import RequestContext
+from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.contenttypes.models import ContentType
@@ -14,7 +13,7 @@ from datatrans.utils import count_model_words
 
 
 def can_translate(user):
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         return False
     elif user.is_superuser:
         return True
@@ -96,9 +95,11 @@ def model_list(request):
     total_words = sum(m['words'] for m in models)
     context = {'models': models, 'words': total_words}
 
-    return render_to_response('datatrans/model_list.html',
-                              context,
-                              context_instance=RequestContext(request))
+    return render(
+        request,
+        'datatrans/model_list.html',
+        context,
+    )
 
 
 def commit_translations(request):
@@ -175,9 +176,11 @@ def editor(request, model, language, objects):
                    model, lambda x: x.filter(language=language)),
                'first_unedited': first_unedited_translation}
 
-    return render_to_response(
-        'datatrans/model_detail.html', context,
-        context_instance=RequestContext(request))
+    return render(
+        request,
+        'datatrans/model_detail.html',
+        context,
+    )
 
 
 def selector(request, model, language, objects):
@@ -189,9 +192,11 @@ def selector(request, model, language, objects):
         'model': model.__name__,
         'objects': objects
     }
-    return render_to_response(
-        'datatrans/object_list.html', context,
-        context_instance=RequestContext(request))
+    return render(
+        request,
+        'datatrans/object_list.html',
+        context,
+    )
 
 
 @user_passes_test(can_translate, settings.LOGIN_URL)
@@ -237,7 +242,7 @@ def model_detail(request, slug, language):
 @user_passes_test(can_translate, settings.LOGIN_URL)
 def make_messages(request):
     utils.make_messages()
-    return HttpResponseRedirect(reverse_lazy('datatrans_model_list'))
+    return HttpResponseRedirect(reverse('datatrans_model_list'))
 
 
 @user_passes_test(can_translate, settings.LOGIN_URL)
@@ -250,7 +255,7 @@ def obsolete_list(request):
 
     if request.method == 'POST':
         all_obsoletes.delete()
-        return HttpResponseRedirect(reverse_lazy('datatrans_obsolete_list'))
+        return HttpResponseRedirect(reverse ('datatrans_obsolete_list'))
 
     context = {'obsoletes': obsoletes}
-    return render_to_response('datatrans/obsolete_list.html', context, context_instance=RequestContext(request))
+    return render(request, 'datatrans/obsolete_list.html', context)
