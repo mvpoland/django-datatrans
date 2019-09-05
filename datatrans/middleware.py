@@ -1,8 +1,9 @@
 from django.utils.cache import patch_vary_headers
 from django.utils import translation
+from django.utils.deprecation import MiddlewareMixin
 
 
-class MinimalLocaleMiddleware(object):
+class MinimalLocaleMiddleware(MiddlewareMixin):
     """
     This is a minimal version of the LocaleMiddleware from Django.
     It only supports setting the current language from sessions.

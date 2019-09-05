@@ -1,4 +1,5 @@
 # Dependencies required to develop/test this app.
 
-Django==1.9.12
+Django==1.10.8
+pytest
 tox
