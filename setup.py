@@ -31,6 +31,6 @@ setup(
         'Topic :: Software Development :: Internationalization',
     ],
     install_requires=[
-        'Django>=1.7, <1.10',
+        'Django>=1.7, <2.5',
     ]
 )
