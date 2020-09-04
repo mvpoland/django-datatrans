@@ -99,7 +99,10 @@ class KeyValueQuerySet(QuerySet):
     def iterator(self):
         superiter = super(KeyValueQuerySet, self).iterator()
         while True:
-            obj = next(superiter)
+            try:
+                obj = next(superiter)
+            except StopIteration:
+                break
             # Use cache.add instead of cache.set to prevent race conditions
             for key in obj.cache_keys:
                 cache.add(key, obj, CACHE_DURATION)
