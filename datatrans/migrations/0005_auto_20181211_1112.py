@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='keyvalue',
             name='language',
-            field=models.CharField(choices=[(b'en-pl', 'English (Poland)'), (b'pl-pl', 'Polish')], db_index=True, max_length=5),
+            field=models.CharField(choices=[('en-pl', 'English (Poland)'), ('pl-pl', 'Polish')], db_index=True, max_length=5),
         ),
     ]
