@@ -1,5 +1,4 @@
-version: 2
-
+version: 2.1
 
 common: &common
   working_directory: ~/project
@@ -13,7 +12,7 @@ common: &common
         command: pip install --user tox
     - run:
         name: run tox
-        command: ~/.local/bin/tox -i https://$PYPI_USER:$PYPI_PASS@pypi.mvpl.eu/simple/
+        command: ~/.local/bin/tox
     - save_cache:
         paths:
           - .tox
@@ -22,25 +21,43 @@ common: &common
           - ./eggs
         key: v2-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "requirements.txt" }}-{{ checksum "tox.ini" }}
 
-
 jobs:
-  py27dj19:
+  py27:
     <<: *common
     docker:
       - image: circleci/python:2.7
         environment:
-          TOXENV=py27-dj19
-  py35dj19:
+          TOXENV=py27-dj111
+  py35:
     <<: *common
     docker:
       - image: circleci/python:3.5
         environment:
-          TOXENV=py35-dj19
-
+          TOXENV=py35-dj111,py35-dj20,py35-dj21,py35-dj22
+  py36:
+    <<: *common
+    docker:
+      - image: circleci/python:3.6
+        environment:
+          TOXENV=py36-dj111,py36-dj20,py36-dj21,py36-dj22
+  py37:
+    <<: *common
+    docker:
+      - image: circleci/python:3.7
+        environment:
+          TOXENV=py37-dj111,py37-dj20,py37-dj21,py37-dj22
+  py38:
+    <<: *common
+    docker:
+      - image: circleci/python:3.8
+        environment:
+          TOXENV=py38-dj111,py38-dj20,py38-dj21,py38-dj22
 
 workflows:
-  version: 2
   test:
     jobs:
-      - py27dj19
-      - py35dj19
+      - py27
+      - py35
+      - py36
+      - py37
+      - py38
