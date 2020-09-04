@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.contenttypes.models import ContentType
-from django.utils.text import ugettext_lazy as _
+from django.utils.text import gettext_lazy as _
 
 from datatrans import utils
 from datatrans.models import KeyValue
