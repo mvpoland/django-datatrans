@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('object_id', models.PositiveIntegerField(default=None, null=True)),
                 ('field', models.CharField(max_length=255)),
-                ('language', models.CharField(choices=[(b'nl-nl', 'Dutch (The Netherlands)'), (b'en-nl', 'English (The Netherlands)'), (b'nl-be', 'Dutch (Belgium)'), (b'fr-be', 'French (Belgium)'), (b'en-be', 'English (Belgium)'), (b'en-pl', 'English (Poland)'), (b'pl-pl', 'Polish')], db_index=True, max_length=5)),
+                ('language', models.CharField(choices=[('nl-nl', 'Dutch (The Netherlands)'), ('en-nl', 'English (The Netherlands)'), ('nl-be', 'Dutch (Belgium)'), ('fr-be', 'French (Belgium)'), ('en-be', 'English (Belgium)'), ('en-pl', 'English (Poland)'), ('pl-pl', 'Polish')], db_index=True, max_length=5)),
                 ('value', models.TextField(blank=True)),
                 ('edited', models.BooleanField(default=False)),
                 ('fuzzy', models.BooleanField(default=False)),
