@@ -185,7 +185,7 @@ class ModelWordCount(WordCount):
     """
     Caches the total number of localized words for a model
     """
-    content_type = models.ForeignKey(ContentType, db_index=True, unique=True, on_delete=models.CASCADE)
+    content_type = models.OneToOneField(ContentType, db_index=True, on_delete=models.CASCADE)
 
 
 class FieldWordCount(WordCount):

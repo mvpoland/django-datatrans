@@ -135,6 +135,8 @@ class FieldDescriptor(object):
         self.name = name
 
     def __get__(self, instance, owner):
+        if instance is None:
+            return
         lang_code = get_current_language()
         key = instance.__dict__[self.name]
         if not key:
