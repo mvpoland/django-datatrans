@@ -1,6 +1,6 @@
 from importlib import import_module
 
-VERSION = '1.0.0'
+VERSION = "1.0.1"
 __version__ = VERSION
 
 
@@ -12,6 +12,6 @@ def autodiscover():
 
     for app in settings.INSTALLED_APPS:
         try:
-            import_module('{}.datatranslation'.format(app))
+            import_module("{}.datatranslation".format(app))
         except ImportError:
             pass

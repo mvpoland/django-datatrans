@@ -6,6 +6,7 @@ def test_concurrently(times):
     INSERT might fail when the INSERT assumes that the data has not changed
     since the SELECT.
     """
+
     def test_concurrently_decorator(test_func):
         def wrapper(*args, **kwargs):
             exceptions = []
@@ -17,6 +18,7 @@ def test_concurrently(times):
                 except Exception as e:
                     exceptions.append(e)
                     raise
+
             threads = []
             for i in range(times):
                 threads.append(threading.Thread(target=call_test_func))
@@ -25,6 +27,12 @@ def test_concurrently(times):
             for t in threads:
                 t.join()
             if exceptions:
-                raise Exception('test_concurrently intercepted {} exceptions: {}'.format(len(exceptions), exceptions))
+                raise Exception(
+                    "test_concurrently intercepted {} exceptions: {}".format(
+                        len(exceptions), exceptions
+                    )
+                )
+
         return wrapper
+
     return test_concurrently_decorator

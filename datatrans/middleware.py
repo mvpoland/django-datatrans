@@ -19,19 +19,20 @@ class MinimalLocaleMiddleware(MiddlewareMixin):
         request.LANGUAGE_CODE = translation.get_language()
 
     def process_response(self, request, response):
-        patch_vary_headers(response, ('Accept-Language',))
-        if 'Content-Language' not in response:
-            response['Content-Language'] = translation.get_language()
+        patch_vary_headers(response, ("Accept-Language",))
+        if "Content-Language" not in response:
+            response["Content-Language"] = translation.get_language()
         translation.deactivate()
         return response
 
 
 def get_language_from_request(request):
     from django.conf import settings
+
     supported = dict(settings.LANGUAGES)
 
-    if hasattr(request, 'session'):
-        lang_code = request.session.get('django_language', None)
+    if hasattr(request, "session"):
+        lang_code = request.session.get("django_language", None)
         if lang_code in supported and lang_code is not None:
             return lang_code
     return settings.LANGUAGE_CODE
