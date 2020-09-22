@@ -7,26 +7,24 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 
 from hashlib import sha1
-from six import python_2_unicode_compatible
 
 
 def make_digest(key):
     """Get the SHA1 hexdigest of the given key"""
     if isinstance(key, (list, tuple)):
-        key = '\n'.join(key)
-    return sha1(key.encode('utf-8')).hexdigest()
+        key = "\n".join(key)
+    return sha1(key.encode("utf-8")).hexdigest()
 
 
 def _get_cache_keys(self):
     """Get all the cache keys for the given object"""
-    kv_id_fields = ('language', 'digest', 'content_type_id', 'object_id', 'field')
+    kv_id_fields = ("language", "digest", "content_type_id", "object_id", "field")
     values = tuple(getattr(self, attr) for attr in kv_id_fields)
-    return ('datatrans_{}_{}_{}_{}_{}'.format(*values),
-            'datatrans_{}'.format(self.id))
+    return ("datatrans_{}_{}_{}_{}_{}".format(*values), "datatrans_{}".format(self.id))
 
 
 # cache for an hour
-CACHE_DURATION = getattr(settings, 'DATATRANS_CACHE_DURATION', 60 * 60)
+CACHE_DURATION = getattr(settings, "DATATRANS_CACHE_DURATION", 60 * 60)
 
 
 class KeyValueManager(models.Manager):
@@ -34,25 +32,29 @@ class KeyValueManager(models.Manager):
         return KeyValueQuerySet(self.model)
 
     def get_keyvalue(self, key, language, obj, field):
-        key = key or ''
+        key = key or ""
         if isinstance(key, (list, tuple)):
-            key = '\n'.join(key)
+            key = "\n".join(key)
 
         digest = make_digest(key)
         content_type = ContentType.objects.get_for_model(obj.__class__)
         object_id = obj.id
-        keyvalue, created = self.get_or_create(digest=digest,
-                                               language=language,
-                                               content_type_id=content_type.id,
-                                               object_id=obj.id,
-                                               field=field,
-                                               defaults={'value': key})
+        keyvalue, created = self.get_or_create(
+            digest=digest,
+            language=language,
+            content_type_id=content_type.id,
+            object_id=obj.id,
+            field=field,
+            defaults={"value": key},
+        )
         return keyvalue
 
     def lookup(self, key, language, obj, field):
         kv = self.get_keyvalue(key, language, obj, field)
         if kv.edited:
-            if isinstance(key, (list, tuple)) and not isinstance(kv.value, (list, tuple)):
+            if isinstance(key, (list, tuple)) and not isinstance(
+                kv.value, (list, tuple)
+            ):
                 return kv.value.splitlines()
             return kv.value
         else:
@@ -72,8 +74,8 @@ class KeyValueManager(models.Manager):
     def contribute_to_class(self, model, name):
         signals.post_save.connect(self._post_save, sender=model)
         signals.post_delete.connect(self._post_delete, sender=model)
-        setattr(model, '_get_cache_keys', _get_cache_keys)
-        setattr(model, 'cache_keys', property(_get_cache_keys))
+        setattr(model, "_get_cache_keys", _get_cache_keys)
+        setattr(model, "cache_keys", property(_get_cache_keys))
         return super(KeyValueManager, self).contribute_to_class(model, name)
 
     def _invalidate_cache(self, instance):
@@ -122,18 +124,18 @@ class KeyValueQuerySet(QuerySet):
             # been filtered/cloned.
             return super(KeyValueQuerySet, self).get(*args, **kwargs)
 
-        kv_id_fields = ('language', 'digest', 'content_type', 'object_id', 'field')
+        kv_id_fields = ("language", "digest", "content_type", "object_id", "field")
 
         # Punt on anything more complicated than get by pk/id only...
         if len(kwargs) == 1:
             k = kwargs.keys()[0]
-            if k in ('pk', 'pk__exact', 'id', 'id__exact'):
-                obj = cache.get('datatrans_{}'.format(kwargs.values()[0]))
+            if k in ("pk", "pk__exact", "id", "id__exact"):
+                obj = cache.get("datatrans_{}".format(kwargs.values()[0]))
                 if obj is not None:
                     return obj
         elif set(kv_id_fields) <= set(kwargs.keys()):
             values = tuple(kwargs[attr] for attr in kv_id_fields)
-            obj = cache.get('datatrans_{}_{}_{}_{}_{}'.format(*values))
+            obj = cache.get("datatrans_{}_{}_{}_{}_{}".format(*values))
 
             if obj is not None:
                 return obj
@@ -142,14 +144,14 @@ class KeyValueQuerySet(QuerySet):
         return super(KeyValueQuerySet, self).get(*args, **kwargs)
 
 
-@python_2_unicode_compatible
 class KeyValue(models.Model):
     """
     The datatrans magic is stored in this model. It stores the localized fields of models.
     """
+
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(null=True, default=None)
-    content_object = GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey("content_type", "object_id")
     field = models.CharField(max_length=255)
     language = models.CharField(max_length=5, db_index=True, choices=settings.LANGUAGES)
 
@@ -163,17 +165,18 @@ class KeyValue(models.Model):
     objects = KeyValueManager()
 
     def __str__(self):
-        return '{}: {}'.format(self.language, self.value)
+        return "{}: {}".format(self.language, self.value)
 
     class Meta:
-        #unique_together = ('digest', 'language')
-        unique_together = ('language', 'content_type', 'field', 'object_id', 'digest')
+        # unique_together = ('digest', 'language')
+        unique_together = ("language", "content_type", "field", "object_id", "digest")
 
 
 class WordCount(models.Model):
     """
     It all happens here
     """
+
     class Meta:
         abstract = True
 
@@ -185,17 +188,21 @@ class ModelWordCount(WordCount):
     """
     Caches the total number of localized words for a model
     """
-    content_type = models.OneToOneField(ContentType, db_index=True, on_delete=models.CASCADE)
+
+    content_type = models.OneToOneField(
+        ContentType, db_index=True, on_delete=models.CASCADE
+    )
 
 
 class FieldWordCount(WordCount):
     """
     Caches the total number of localized words for a model field.
     """
+
     class Meta:
-        unique_together = ('content_type', 'field')
+        unique_together = ("content_type", "field")
 
-    content_type = models.ForeignKey(ContentType, db_index=True, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(
+        ContentType, db_index=True, on_delete=models.CASCADE
+    )
     field = models.CharField(max_length=64, db_index=True)
-
-

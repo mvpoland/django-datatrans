@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = 'Deletes duplicate KeyValues, only mysql is supported in a fast way'
+    help = "Deletes duplicate KeyValues, only mysql is supported in a fast way"
 
     @transaction.commit_on_success
     def remove_duplicates_mysql(self):
@@ -17,42 +17,50 @@ class Command(BaseCommand):
         The majority of KeyValues have 1 duplication, but some have 2 duplications. This means that we have to execute
         the deletion query twice since it only deletes 1 duplication (the newest) each time
         """
-        print('  Deleting duplicates from datatrans_keyvalue table')
+        print("  Deleting duplicates from datatrans_keyvalue table")
         cursor = connection.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             select count(id)
             from datatrans_keyvalue
             group by digest, language, content_type_id, object_id, field
             having count(*) > 1
             order by count(id) desc
-        """)
+        """
+        )
         row = cursor.fetchone()
 
         if row and row[0] > 0:
             count = row[0]
-            print('   - Most horrible duplication count = ', count)
+            print("   - Most horrible duplication count = ", count)
 
             for i in range(count - 1):
                 # Mysql doesn't allow to delete in a table while fetching values from it (makes sense).
                 # Therefore we have to fetch the duplicate ids first into a python list.
                 # Secondly we pass this list to the deletion query
-                print('   - Deleting entries with {} duplicates'.format(i + 1))
-                cursor.execute("""
+                print("   - Deleting entries with {} duplicates".format(i + 1))
+                cursor.execute(
+                    """
                         select max(id)
                         from datatrans_keyvalue
                         group by digest, language, content_type_id, object_id, field
                         having count(*) > 1
-                    """)
+                    """
+                )
 
                 ids = [str(_row[0]) for _row in cursor.fetchall()]
                 strids = ",".join(ids)
 
-                cursor.execute("""
+                cursor.execute(
+                    """
                     delete from datatrans_keyvalue
                     where id in ({})
-                """.format(strids))
+                """.format(
+                        strids
+                    )
+                )
         else:
-            print('   - No duplicates found')
+            print("   - No duplicates found")
 
     def remove_duplicates_default(self):
         """
@@ -69,7 +77,10 @@ class Command(BaseCommand):
             key = (kv.language, kv.digest, kv.content_type, kv.object_id, kv.field)
             kv_map[key].append(kv)
 
-            for (kv.language, kv.digest, kv.content_type, kv.object_id, kv.field), kv_list in kv_map.items():
+            for (
+                (kv.language, kv.digest, kv.content_type, kv.object_id, kv.field),
+                kv_list,
+            ) in kv_map.items():
                 if len(kv_list) == 1:
                     continue
 
@@ -77,26 +88,37 @@ class Command(BaseCommand):
 
                 for kv in kv_list[:-1]:
                     if kv.id:
-                        print('Deleting KeyValue ', kv.id, ", ", kv)
+                        print("Deleting KeyValue ", kv.id, ", ", kv)
                         deleted += 1
                         kv.delete()
 
-        print('Duplicates deleted:', deleted)
+        print("Duplicates deleted:", deleted)
 
     def print_db_info(self):
         from django.conf import settings
+
         conn = db._get_connection().connection
         dbinfo = settings.DATABASES[db.db_alias]
-        print('Database: ' + conn.get_host_info() + ":" + str(conn.port) + ", db: " + dbinfo['NAME'])
+        print(
+            "Database: "
+            + conn.get_host_info()
+            + ":"
+            + str(conn.port)
+            + ", db: "
+            + dbinfo["NAME"]
+        )
 
     def handle(self, *args, **options):
         self.print_db_info()
 
-        if db.backend_name == 'mysql':
-            print('Remove duplicates: mysql')
+        if db.backend_name == "mysql":
+            print("Remove duplicates: mysql")
             self.remove_duplicates_mysql()
         else:
-            #print 'Remove duplicates: default'
-            #print 'Grab some coffee, this can take a while ...'
-            #self.remove_duplicates_default()
-            print('Unfortunately this command only supports mysql, selected db: ', db.backend_name)
+            # print 'Remove duplicates: default'
+            # print 'Grab some coffee, this can take a while ...'
+            # self.remove_duplicates_default()
+            print(
+                "Unfortunately this command only supports mysql, selected db: ",
+                db.backend_name,
+            )

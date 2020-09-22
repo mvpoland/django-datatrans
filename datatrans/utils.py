@@ -1,5 +1,4 @@
 # -*- encoding: utf-8 -*-
-from __future__ import unicode_literals
 import operator
 import django
 
@@ -21,7 +20,7 @@ Example:
 
 >>> from blog.models import Entry
 >>> from datatrans.utils import *
->>> class EntryTranslation(object):
+>>> class EntryTranslation:
 ...     fields = ('title', 'body',)
 ...
 >>> register(Entry, EntryTranslation)
@@ -50,9 +49,7 @@ def count_model_words(model):
     Returns word count for the given model and language.
     """
     ct = ContentType.objects.get_for_model(model)
-    model_wc, created = ModelWordCount.objects.get_or_create(
-        content_type=ct
-    )
+    model_wc, created = ModelWordCount.objects.get_or_create(content_type=ct)
     if not model_wc.valid:
         total_words = 0
 
@@ -91,7 +88,7 @@ def _count_words(text):
     Count words in a piece of text.
     """
     if isinstance(text, (list, tuple)):
-        text = '\n'.join(text)
+        text = "\n".join(text)
     return len(text.split()) if text else 0
 
 
@@ -100,14 +97,18 @@ def get_default_language():
     Get the source language code if specified, or else just the default
     language code.
     """
-    lang = getattr(settings, 'SOURCE_LANGUAGE_CODE', settings.LANGUAGE_CODE)
+    lang = getattr(settings, "SOURCE_LANGUAGE_CODE", settings.LANGUAGE_CODE)
     default = [l[0] for l in settings.LANGUAGES if l[0] == lang]
     if len(default) == 0:
         # when not found, take first part ('en' instead of 'en-us')
-        lang = lang.split('-')[0]
+        lang = lang.split("-")[0]
         default = [l[0] for l in settings.LANGUAGES if l[0] == lang]
     if len(default) == 0:
-        raise ImproperlyConfigured("The [SOURCE_]LANGUAGE_CODE '{}' is not found in your LANGUAGES setting.".format(lang))
+        raise ImproperlyConfigured(
+            "The [SOURCE_]LANGUAGE_CODE '{}' is not found in your LANGUAGES setting.".format(
+                lang
+            )
+        )
     return default[0]
 
 
@@ -121,16 +122,16 @@ def get_current_language():
 
     current = [l[0] for l in settings.LANGUAGES if l[0] == lang]
     if len(current) == 0:
-        lang = lang.split('-')[0]
+        lang = lang.split("-")[0]
         current = [l[0] for l in settings.LANGUAGES if l[0] == lang]
     if len(current) == 0:
         # Fallback to default language code
         return get_default_language()
-    
+
     return current[0]
 
 
-class FieldDescriptor(object):
+class FieldDescriptor:
     def __init__(self, name):
         self.name = name
 
@@ -140,7 +141,7 @@ class FieldDescriptor(object):
         lang_code = get_current_language()
         key = instance.__dict__[self.name]
         if not key:
-            return ''
+            return ""
         if instance.id is None:
             return key
         return KeyValue.objects.lookup(key, lang_code, instance, self.name)
@@ -149,17 +150,21 @@ class FieldDescriptor(object):
         lang_code = get_current_language()
         default_lang = get_default_language()
 
-        if lang_code == default_lang or not self.name in instance.__dict__ or instance.id is None:
+        if (
+            lang_code == default_lang
+            or not self.name in instance.__dict__
+            or instance.id is None
+        ):
             instance.__dict__[self.name] = value
         else:
             original = instance.__dict__[self.name]
-            if original == '':
+            if original == "":
                 instance.__dict__[self.name] = value
                 original = value
 
             kv = KeyValue.objects.get_keyvalue(original, lang_code, instance, self.name)
             if isinstance(value, (list, tuple)):
-                value = '\r\n'.join(value)
+                value = "\r\n".join(value)
 
             kv.value = value
             kv.edited = True
@@ -169,7 +174,7 @@ class FieldDescriptor(object):
 
 
 def _pre_save(sender, instance, **kwargs):
-    setattr(instance, 'datatrans_old_language', get_current_language())
+    setattr(instance, "datatrans_old_language", get_current_language())
     default_lang = get_default_language()
     translation.activate(default_lang)
 
@@ -186,19 +191,23 @@ def _pre_save(sender, instance, **kwargs):
         register = get_registry()
         fields = register[sender].values()
         for field in fields:
-            old_digest = make_digest(original.__dict__[field.name] or '')
-            new_digest = make_digest(instance.__dict__[field.name] or '')
+            old_digest = make_digest(original.__dict__[field.name] or "")
+            new_digest = make_digest(instance.__dict__[field.name] or "")
             # If changed, update keyvalues
             if old_digest != new_digest:
                 # Check if the new value already exists, if not, create a new one. The old one will be obsoleted.
-                old_query = KeyValue.objects.filter(digest=old_digest,
-                                                    content_type__id=ct.id,
-                                                    object_id=original.id,
-                                                    field=field.name)
-                new_query = KeyValue.objects.filter(digest=new_digest,
-                                                    content_type__id=ct.id,
-                                                    object_id=original.id,
-                                                    field=field.name)
+                old_query = KeyValue.objects.filter(
+                    digest=old_digest,
+                    content_type__id=ct.id,
+                    object_id=original.id,
+                    field=field.name,
+                )
+                new_query = KeyValue.objects.filter(
+                    digest=new_digest,
+                    content_type__id=ct.id,
+                    object_id=original.id,
+                    field=field.name,
+                )
 
                 old_count = old_query.count()
                 new_count = new_query.count()
@@ -207,24 +216,31 @@ def _pre_save(sender, instance, **kwargs):
                     for kv in old_query:
                         if new_query.filter(language=kv.language).count() > 0:
                             continue
-                        new_value = instance.__dict__[field.name] if kv.language == default_lang else kv.value
-                        new_kv = KeyValue(digest=new_digest,
-                                          content_type_id=ct.id,
-                                          object_id=original.id,
-                                          field=field.name,
-                                          language=kv.language,
-                                          edited=kv.edited,
-                                          fuzzy=True,
-                                          value=new_value)
+                        new_value = (
+                            instance.__dict__[field.name]
+                            if kv.language == default_lang
+                            else kv.value
+                        )
+                        new_kv = KeyValue(
+                            digest=new_digest,
+                            content_type_id=ct.id,
+                            object_id=original.id,
+                            field=field.name,
+                            language=kv.language,
+                            edited=kv.edited,
+                            fuzzy=True,
+                            value=new_value,
+                        )
                         new_kv.save()
 
 
 def _post_save(sender, instance, created, **kwargs):
-    translation.activate(getattr(instance, 'datatrans_old_language',
-                                 get_default_language()))
+    translation.activate(
+        getattr(instance, "datatrans_old_language", get_default_language())
+    )
 
 
-def _datatrans_filter(self, language=None, mode='and', **kwargs):
+def _datatrans_filter(self, language=None, mode="and", **kwargs):
     """
     This filter allows you to search model instances on the
     translated contents of a given field.
@@ -257,9 +273,9 @@ def _datatrans_filter(self, language=None, mode='and', **kwargs):
                                      mode='and', language='nl')
     ...
     """
-    assert mode in ('and', 'or')
+    assert mode in ("and", "or")
 
-    if mode == 'and' and len(kwargs) > 1:
+    if mode == "and" and len(kwargs) > 1:
         raise NotImplementedError("No support for multiple field name in 'and' mode.")
 
     if language is None:
@@ -270,17 +286,22 @@ def _datatrans_filter(self, language=None, mode='and', **kwargs):
     q_objects = []
 
     for key, value in kwargs.items():
-        if '__' in key:
-            field, method = key.split('__', 1)
+        if "__" in key:
+            field, method = key.split("__", 1)
         else:
-            field, method = key, 'exact'
+            field, method = key, "exact"
 
         if field not in registry[self.model].keys():
-            raise ValueError("Field '" + field + "' of " + self.model.__name__ +
-                            " has not been registered for translation.")
+            raise ValueError(
+                "Field '"
+                + field
+                + "' of "
+                + self.model.__name__
+                + " has not been registered for translation."
+            )
 
         def add_filters(field, method, value):
-            filters = {'field': field, 'value__' + method: value}
+            filters = {"field": field, "value__" + method: value}
             q_objects.append(models.Q(**filters))
 
         try:
@@ -293,10 +314,10 @@ def _datatrans_filter(self, language=None, mode='and', **kwargs):
     query = KeyValue.objects.filter(content_type__id=ct.id, language=language)
 
     if q_objects:
-        op = operator.or_ if mode == 'or' else operator.and_
+        op = operator.or_ if mode == "or" else operator.and_
         query = query.filter(reduce(op, q_objects))
 
-    object_ids = set(i for i , in query.values_list('object_id'))
+    object_ids = set(i for i, in query.values_list("object_id"))
 
     return self.filter(id__in=object_ids)
 
@@ -331,7 +352,7 @@ def register(model, modeltranslation):
 
     For example:
 
-    class BlogPostTranslation(object):
+    class BlogPostTranslation:
         fields = ('title', 'content',)
 
     """
@@ -341,9 +362,21 @@ def register(model, modeltranslation):
         if django.VERSION >= (1, 6):
             # In 1.6, '_fields()' does not exist anymore; in 1.5 both exists and
             # in 1.4, '.fields' doesn't exist yet.
-            fields = dict([(f.name, f) for f in model._meta.fields if f.name in modeltranslation.fields])
+            fields = dict(
+                [
+                    (f.name, f)
+                    for f in model._meta.fields
+                    if f.name in modeltranslation.fields
+                ]
+            )
         else:
-            fields = dict([(f.name, f) for f in model._meta._fields() if f.name in modeltranslation.fields])
+            fields = dict(
+                [
+                    (f.name, f)
+                    for f in model._meta._fields()
+                    if f.name in modeltranslation.fields
+                ]
+            )
 
         REGISTRY[model] = fields
         META[model] = modeltranslation
