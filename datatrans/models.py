@@ -128,9 +128,9 @@ class KeyValueQuerySet(QuerySet):
 
         # Punt on anything more complicated than get by pk/id only...
         if len(kwargs) == 1:
-            k = kwargs.keys()[0]
+            k, v = list(kwargs.items())[0]
             if k in ("pk", "pk__exact", "id", "id__exact"):
-                obj = cache.get("datatrans_{}".format(kwargs.values()[0]))
+                obj = cache.get("datatrans_{}".format(v))
                 if obj is not None:
                     return obj
         elif set(kv_id_fields) <= set(kwargs.keys()):
