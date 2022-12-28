@@ -1,6 +1,6 @@
 from importlib import import_module
 
-VERSION = "1.0.4"
+VERSION = "1.0.5"
 __version__ = VERSION
 
 
